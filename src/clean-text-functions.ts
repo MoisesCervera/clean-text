@@ -278,16 +278,3 @@ export function capitalizeSentences(input: string, options?: Options): string {
 
     return result;
 }
-
-// Legacy functions for backwards compatibility (now using normalizeWhitespace)
-export function removeNewlines(input: string, options?: Options): string {
-    return normalizeWhitespace(input, options);
-}
-
-export function removeDoubleSpaces(input: string, options?: Options): string {
-    return normalizeWhitespace(input, options);
-}
-
-export function unifyWhitespace(input: string, options?: Options): string {
-    return normalizeWhitespace(input, options);
-}
