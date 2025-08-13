@@ -59,8 +59,8 @@ export default async function Combo2Command() {
         if (combo2Prefs.unifyQuotes) {
             result = convert(result, "Unify Quotes");
         }
-        if (combo2Prefs.removeNonPrintable) {
-            result = convert(result, "Remove Non-Printable Characters");
+        if (combo2Prefs.removeInvisibleCharacters) {
+            result = convert(result, "Remove Invisible Characters");
         }
         if (combo2Prefs.maintainLineBreaks) {
             result = convert(result, "Maintain Line Breaks");

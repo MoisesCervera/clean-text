@@ -7,34 +7,71 @@ export interface Options {
     targetQuoteType?: 'double' | 'single' | 'smart-double' | 'smart-single';
     // Line break format options
     lineBreakFormat?: 'LF' | 'CRLF' | 'auto';
-    // Emoji removal option
-    removeEmoji?: boolean;
     preferredLanguage?: 'en' | 'es' | 'fr';
+    // Whitespace normalization options
+    targetWhitespaceType?: 'space' | 'no-break-space' | 'thin-space' | 'custom';
+    customWhitespaceChar?: string;
 }
 
 interface Preferences {
     defaultQuoteType: 'double' | 'single' | 'smart-double' | 'smart-single';
     defaultLineBreakFormat: 'LF' | 'CRLF' | 'auto';
     defaultLanguage: 'en' | 'es' | 'fr';
-    defaultRemoveEmoji: boolean;
     abbreviationExceptions: string;
+    defaultWhitespaceType: 'space' | 'no-break-space' | 'thin-space' | 'custom';
 }
 
-// Normalize whitespace (combines removeNewlines, removeDoubleSpaces, and unifyWhitespace)
+// Normalize space-like whitespace characters (unify all types of spaces into one selected type)
 export function normalizeWhitespace(input: string, options?: Options): string {
+    const preferences = getPreferenceValues<Preferences>();
+    const targetType = options?.targetWhitespaceType || preferences.defaultWhitespaceType || 'space';
+
+    // Define target whitespace character
+    let targetChar: string;
+    switch (targetType) {
+        case 'space':
+            targetChar = '\u0020'; // Regular space
+            break;
+        case 'no-break-space':
+            targetChar = '\u00A0'; // Non-breaking space
+            break;
+        case 'thin-space':
+            targetChar = '\u2009'; // Thin space
+            break;
+        case 'custom':
+            targetChar = options?.customWhitespaceChar || '\u0020';
+            break;
+        default:
+            targetChar = '\u0020';
+    }
+
+    // Category 1: Space-like whitespace characters (excluding line breaks)
+    const spacePattern = /[\u0020\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000]+/g;
+
     return input
-        .replace(/\r\n/g, ' ')  // Windows line endings
-        .replace(/\r/g, ' ')    // Mac line endings
-        .replace(/\n/g, ' ')    // Unix line endings
-        .replace(/\u2028/g, ' ') // Unicode line separator
-        .replace(/\u2029/g, ' ') // Unicode paragraph separator
-        .replace(/\s+/g, ' ')   // Collapse multiple spaces into one
-        .trim();                // Remove leading/trailing spaces
+        .replace(spacePattern, targetChar) // Replace all space variants with target
+        .replace(new RegExp(`${targetChar.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}+`, 'g'), targetChar) // Collapse consecutive target chars
+        .trim(); // Trim leading and trailing whitespace
 }
 
-// Trim leading and trailing spaces/tabs
+// Remove invisible and zero-width characters
+export function removeInvisibleCharacters(input: string, options?: Options): string {
+    return input
+        // Category 3: Zero-width characters
+        .replace(/[\u200B\u200C\u200D\u2060\uFEFF]/g, '')
+        // Category 4: Script-specific invisible characters
+        .replace(/[\u180E\u3164\uFFA0]/g, '')
+        // Category 5: Mathematical notation invisible characters
+        .replace(/[\u2061-\u2064]/g, '')
+        // Category 6: Other invisible and control characters
+        .replace(/[\u00AD\u034F\u061C\u115F\u17B4\u17B5\u200E\u200F\u202A-\u202E\u2066-\u2069]/g, '');
+}
+
+// Trim leading and trailing whitespace
 export function trimWhitespace(input: string, options?: Options): string {
-    return input.trim();
+    // Trim all types of whitespace including spaces and line breaks
+    const allWhitespacePattern = /^[\s\u0020\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000\u000A\u000B\u000C\u000D\u0085\u2028\u2029]+|[\s\u0020\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000\u000A\u000B\u000C\u000D\u0085\u2028\u2029]+$/g;
+    return input.replace(allWhitespacePattern, '');
 }
 
 // Smart quote unification with context awareness
@@ -145,25 +182,6 @@ export function unifyQuotes(input: string, options?: Options): string {
     return processedInput;
 }
 
-
-// Remove non printable characters without removing numbers or normal symbols
-export function removeNonPrintableCharacters(input: string, options?: Options): string {
-    const preferences = getPreferenceValues<Preferences>();
-    const shouldRemoveEmoji = options?.removeEmoji ?? preferences.defaultRemoveEmoji ?? true;
-
-
-    input = input.replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]/g, "");
-    input = input.replace(/[\p{Cf}\p{Cs}\p{Co}\p{Cn}]+/gu, "");
-    input = input.replace(/[\u200B-\u200D\u2060\uFEFF]/g, "");
-    if (shouldRemoveEmoji) {
-        input = input.replace(
-            /[\u{1F1E6}-\u{1F1FF}\u{1F300}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu,
-            " "
-        );
-    }
-    return input;
-}
-
 // Maintain consistent line breaks with configurable format
 export function maintainLineBreaks(input: string, options?: Options): string {
     const preferences = getPreferenceValues<Preferences>();
@@ -189,12 +207,41 @@ export function maintainLineBreaks(input: string, options?: Options): string {
 }
 
 
-// Single Paragraph Mode (unify all text into a single paragraph)
+// Single Paragraph Mode (comprehensive text unification: removes line breaks, invisible chars, and normalizes whitespace)
 export function singleParagraphMode(input: string, options?: Options): string {
+    const preferences = getPreferenceValues<Preferences>();
+    const targetType = options?.targetWhitespaceType || preferences.defaultWhitespaceType || 'space';
+
+    let targetChar: string;
+    switch (targetType) {
+        case 'space':
+            targetChar = '\u0020';
+            break;
+        case 'no-break-space':
+            targetChar = '\u00A0';
+            break;
+        case 'thin-space':
+            targetChar = '\u2009';
+            break;
+        case 'custom':
+            targetChar = options?.customWhitespaceChar || '\u0020';
+            break;
+        default:
+            targetChar = '\u0020';
+    }
+
     return input
-        .replace(/\r?\n\s*\r?\n/g, ' ')
-        .replace(/\r?\n/g, ' ')
-        .replace(/\s+/g, ' ')
+        // First remove invisible characters
+        .replace(/[\u200B\u200C\u200D\u2060\uFEFF\u180E\u3164\uFFA0\u2061-\u2064\u00AD\u034F\u061C\u115F\u17B4\u17B5\u200E\u200F\u202A-\u202E\u2066-\u2069]/g, '')
+        // Replace paragraph breaks (double line breaks) with single space
+        .replace(/[\u000A\u000B\u000C\u000D\u0085\u2028\u2029]+\s*[\u000A\u000B\u000C\u000D\u0085\u2028\u2029]+/g, targetChar)
+        // Replace remaining line breaks with target character
+        .replace(/[\u000A\u000B\u000C\u000D\u0085\u2028\u2029]+/g, targetChar)
+        // Normalize all space-like characters to target character
+        .replace(/[\u0020\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000]+/g, targetChar)
+        // Collapse multiple consecutive target characters into one
+        .replace(new RegExp(`${targetChar.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}+`, 'g'), targetChar)
+        // Trim leading and trailing whitespace
         .trim();
 }
 
@@ -278,3 +325,5 @@ export function capitalizeSentences(input: string, options?: Options): string {
 
     return result;
 }
+
+

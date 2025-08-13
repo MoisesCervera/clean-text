@@ -23,8 +23,8 @@
           "name": "popToRoot",
           "type": "checkbox",
           "title": "Pop to Root",
-          "label": "Return to Raycast root after action",
-          "description": "Return to Raycast root after applying combo",
+          "label": "Return to root after action",
+          "description": "Return to root after applying combo",
           "default": false,
           "required": false
         },
@@ -56,11 +56,11 @@
           "required": false
         },
         {
-          "name": "removeNonPrintable",
+          "name": "removeInvisibleCharacters",
           "type": "checkbox",
-          "title": "Remove Non-Printable Characters",
+          "title": "Remove Invisible Characters",
           "label": "Remove invisible characters",
-          "description": "Remove non-printable characters",
+          "description": "Remove Invisible characters",
           "default": false,
           "required": false
         },
@@ -112,8 +112,8 @@
           "name": "popToRoot",
           "type": "checkbox",
           "title": "Pop to Root",
-          "label": "Return to Raycast root after action",
-          "description": "Return to Raycast root after applying combo",
+          "label": "Return to root after action",
+          "description": "Return to root after applying combo",
           "default": false,
           "required": false
         },
@@ -145,11 +145,11 @@
           "required": false
         },
         {
-          "name": "removeNonPrintable",
+          "name": "removeInvisibleCharacters",
           "type": "checkbox",
-          "title": "Remove Non-Printable Characters",
+          "title": "Remove Invisible Characters",
           "label": "Remove invisible characters",
-          "description": "Remove non-printable characters",
+          "description": "Remove invisible characters",
           "default": false,
           "required": false
         },
@@ -255,8 +255,8 @@
       "name": "popToRoot",
       "type": "checkbox",
       "title": "Pop to Root",
-      "label": "Return to Raycast root after action",
-      "description": "Return to Raycast root after action",
+      "label": "Return to root after action",
+      "description": "Return to root after action",
       "default": false,
       "required": false
     },
@@ -287,6 +287,40 @@
       ]
     },
     {
+      "name": "defaultWhitespaceType",
+      "type": "dropdown",
+      "title": "Default Whitespace Type",
+      "description": "Choose the default whitespace type for text processing",
+      "default": "space",
+      "required": false,
+      "data": [
+        {
+          "title": "Regular Space",
+          "value": "space"
+        },
+        {
+          "title": "No-Break Space",
+          "value": "no-break-space"
+        },
+        {
+          "title": "Thin Space",
+          "value": "thin-space"
+        },
+        {
+          "title": "Custom",
+          "value": "custom"
+        }
+      ]
+    },
+    {
+      "name": "customWhitespaceChar",
+      "type": "textfield",
+      "title": "Custom Whitespace Character",
+      "description": "Specify a custom whitespace character to use",
+      "default": "\u0020",
+      "required": false
+    },
+    {
       "name": "defaultLineBreakFormat",
       "type": "dropdown",
       "title": "Default Line Break Format",
@@ -307,15 +341,6 @@
           "value": "CRLF"
         }
       ]
-    },
-    {
-      "name": "defaultRemoveEmoji",
-      "type": "checkbox",
-      "title": "Remove Emojis by Default",
-      "label": "Remove emojis when cleaning non-printable characters",
-      "description": "Controls whether emojis are removed along with non-printable characters",
-      "default": true,
-      "required": false
     },
     {
       "name": "abbreviationExceptions",
