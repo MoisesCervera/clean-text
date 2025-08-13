@@ -164,7 +164,7 @@ export function removeNonPrintableCharacters(input: string, options?: Options): 
 
 
 // Normalize spaces around punctuation marks
-export function normalizePunctuationSpaces(input: string): string {
+export function normalizePunctuationSpaces(input: string, options?: Options): string {
     return input
         // Espacios correctos después de .,!?;: (pero no antes de cierre de comillas)
         .replace(/\s*([,.!?;:])\s*(?=(?:["'”’)]|$))/gu, "$1") // si va seguido de cierre, no añade espacio extra
