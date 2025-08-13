@@ -1,0 +1,328 @@
+{
+  "$schema": "https://www.raycast.com/schemas/extension.json",
+  "name": "clean-text",
+  "title": "Clean Text",
+  "description": "Clean and format text with various text modification operations",
+  "icon": "extension-icon.png",
+  "author": "GenuineCheddar",
+  "license": "MIT",
+  "commands": [
+    {
+      "name": "clean-text",
+      "title": "Clean Text",
+      "description": "Apply text cleaning and formatting modifications",
+      "mode": "view"
+    },
+    {
+      "name": "combo1",
+      "title": "Combo 1",
+      "description": "Apply your first custom combination of text modifications",
+      "mode": "no-view",
+      "preferences": [
+        {
+          "name": "popToRoot",
+          "type": "checkbox",
+          "title": "Pop to Root",
+          "label": "Return to Raycast root after action",
+          "description": "Return to Raycast root after applying combo",
+          "default": false,
+          "required": false
+        },
+        {
+          "name": "normalizeWhitespace",
+          "type": "checkbox",
+          "title": "Normalize Whitespace",
+          "label": "Remove newlines and extra spaces",
+          "description": "Combine newlines, double spaces, and whitespace unification",
+          "default": false,
+          "required": false
+        },
+        {
+          "name": "trimWhitespace",
+          "type": "checkbox",
+          "title": "Trim Whitespace",
+          "label": "Remove leading/trailing spaces",
+          "description": "Remove spaces at start and end",
+          "default": false,
+          "required": false
+        },
+        {
+          "name": "unifyQuotes",
+          "type": "checkbox",
+          "title": "Unify Quotes",
+          "label": "Convert quotes using global settings",
+          "description": "Standardize quote characters",
+          "default": false,
+          "required": false
+        },
+        {
+          "name": "removeNonPrintable",
+          "type": "checkbox",
+          "title": "Remove Non-Printable Characters",
+          "label": "Remove invisible characters",
+          "description": "Remove non-printable characters",
+          "default": false,
+          "required": false
+        },
+        {
+          "name": "normalizePunctuation",
+          "type": "checkbox",
+          "title": "Normalize Punctuation Spaces",
+          "label": "Fix spacing around punctuation",
+          "description": "Standardize punctuation spacing",
+          "default": false,
+          "required": false
+        },
+        {
+          "name": "maintainLineBreaks",
+          "type": "checkbox",
+          "title": "Maintain Line Breaks",
+          "label": "Standardize line break format",
+          "description": "Convert line breaks to consistent format",
+          "default": false,
+          "required": false
+        },
+        {
+          "name": "singleParagraph",
+          "type": "checkbox",
+          "title": "Single Paragraph Mode",
+          "label": "Convert to single paragraph",
+          "description": "Merge all text into one paragraph",
+          "default": false,
+          "required": false
+        },
+        {
+          "name": "removeNumbering",
+          "type": "checkbox",
+          "title": "Remove Numbering",
+          "label": "Remove bullets and numbering",
+          "description": "Remove list formatting",
+          "default": false,
+          "required": false
+        },
+        {
+          "name": "capitalizeSentences",
+          "type": "checkbox",
+          "title": "Capitalize Sentences",
+          "label": "Capitalize first letter of sentences",
+          "description": "Fix sentence capitalization",
+          "default": false,
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "combo2",
+      "title": "Combo 2",
+      "description": "Apply your second custom combination of text modifications",
+      "mode": "no-view",
+      "preferences": [
+        {
+          "name": "popToRoot",
+          "type": "checkbox",
+          "title": "Pop to Root",
+          "label": "Return to Raycast root after action",
+          "description": "Return to Raycast root after applying combo",
+          "default": false,
+          "required": false
+        },
+        {
+          "name": "normalizeWhitespace",
+          "type": "checkbox",
+          "title": "Normalize Whitespace",
+          "label": "Remove newlines and extra spaces",
+          "description": "Combine newlines, double spaces, and whitespace unification",
+          "default": false,
+          "required": false
+        },
+        {
+          "name": "trimWhitespace",
+          "type": "checkbox",
+          "title": "Trim Whitespace",
+          "label": "Remove leading/trailing spaces",
+          "description": "Remove spaces at start and end",
+          "default": false,
+          "required": false
+        },
+        {
+          "name": "unifyQuotes",
+          "type": "checkbox",
+          "title": "Unify Quotes",
+          "label": "Convert quotes using global settings",
+          "description": "Standardize quote characters",
+          "default": false,
+          "required": false
+        },
+        {
+          "name": "removeNonPrintable",
+          "type": "checkbox",
+          "title": "Remove Non-Printable Characters",
+          "label": "Remove invisible characters",
+          "description": "Remove non-printable characters",
+          "default": false,
+          "required": false
+        },
+        {
+          "name": "normalizePunctuation",
+          "type": "checkbox",
+          "title": "Normalize Punctuation Spaces",
+          "label": "Fix spacing around punctuation",
+          "description": "Standardize punctuation spacing",
+          "default": false,
+          "required": false
+        },
+        {
+          "name": "maintainLineBreaks",
+          "type": "checkbox",
+          "title": "Maintain Line Breaks",
+          "label": "Standardize line break format",
+          "description": "Convert line breaks to consistent format",
+          "default": false,
+          "required": false
+        },
+        {
+          "name": "singleParagraph",
+          "type": "checkbox",
+          "title": "Single Paragraph Mode",
+          "label": "Convert to single paragraph",
+          "description": "Merge all text into one paragraph",
+          "default": false,
+          "required": false
+        },
+        {
+          "name": "removeNumbering",
+          "type": "checkbox",
+          "title": "Remove Numbering",
+          "label": "Remove bullets and numbering",
+          "description": "Remove list formatting",
+          "default": false,
+          "required": false
+        },
+        {
+          "name": "capitalizeSentences",
+          "type": "checkbox",
+          "title": "Capitalize Sentences",
+          "label": "Capitalize first letter of sentences",
+          "description": "Fix sentence capitalization",
+          "default": true,
+          "required": false
+        }
+      ]
+    }
+  ],
+  "preferences": [
+    {
+      "name": "source",
+      "type": "dropdown",
+      "title": "Preferred Source",
+      "description": "Where to get text from first",
+      "default": "selection",
+      "required": false,
+      "data": [
+        {
+          "title": "Selected Text",
+          "value": "selection"
+        },
+        {
+          "title": "Clipboard",
+          "value": "clipboard"
+        }
+      ]
+    },
+    {
+      "name": "action",
+      "type": "dropdown",
+      "title": "Preferred Action",
+      "description": "What to do with the modified text",
+      "default": "paste",
+      "required": false,
+      "data": [
+        {
+          "title": "Copy to Clipboard",
+          "value": "copy"
+        },
+        {
+          "title": "Paste to Active App",
+          "value": "paste"
+        }
+      ]
+    },
+    {
+      "name": "popToRoot",
+      "type": "checkbox",
+      "title": "Pop to Root",
+      "label": "Return to Raycast root after action",
+      "description": "Return to Raycast root after action",
+      "default": false,
+      "required": false
+    },
+    {
+      "name": "defaultQuoteType",
+      "type": "dropdown",
+      "title": "Default Quote Type",
+      "description": "Choose the default quote style for quote unification",
+      "default": "double",
+      "required": false,
+      "data": [
+        {
+          "title": "Double Quotes (\")",
+          "value": "double"
+        },
+        {
+          "title": "Single Quotes (')",
+          "value": "single"
+        },
+        {
+          "title": "Smart Double Quotes (\"\")",
+          "value": "smart-double"
+        },
+        {
+          "title": "Smart Single Quotes ('')",
+          "value": "smart-single"
+        }
+      ]
+    },
+    {
+      "name": "defaultLineBreakFormat",
+      "type": "dropdown",
+      "title": "Default Line Break Format",
+      "description": "Choose the default line break format for text processing",
+      "default": "auto",
+      "required": false,
+      "data": [
+        {
+          "title": "Auto (detect OS)",
+          "value": "auto"
+        },
+        {
+          "title": "LF (Unix/Linux/macOS)",
+          "value": "LF"
+        },
+        {
+          "title": "CRLF (Windows)",
+          "value": "CRLF"
+        }
+      ]
+    }
+  ],
+  "dependencies": {
+    "@raycast/api": "^1.102.3",
+    "@raycast/utils": "^1.17.0"
+  },
+  "devDependencies": {
+    "@raycast/eslint-config": "^2.0.4",
+    "@types/node": "22.13.10",
+    "@types/react": "19.0.10",
+    "eslint": "^9.22.0",
+    "prettier": "^3.5.3",
+    "typescript": "^5.8.2"
+  },
+  "scripts": {
+    "build": "ray build",
+    "dev": "ray develop",
+    "fix-lint": "ray lint --fix",
+    "lint": "ray lint",
+    "prepublishOnly": "echo \"\\n\\nIt seems like you are trying to publish the Raycast extension to npm.\\n\\nIf you did intend to publish it to npm, remove the \\`prepublishOnly\\` script and rerun \\`npm publish\\` again.\\nIf you wanted to publish it to the Raycast Store instead, use \\`npm run publish\\` instead.\\n\\n\" && exit 1",
+    "publish": "npx @raycast/api@latest publish"
+  }
+}
