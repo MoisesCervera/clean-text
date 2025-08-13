@@ -303,6 +303,15 @@
           "value": "CRLF"
         }
       ]
+    },
+    {
+      "name": "defaultRemoveEmoji",
+      "type": "checkbox",
+      "title": "Remove Emojis by Default",
+      "label": "Remove emojis when cleaning non-printable characters",
+      "description": "Controls whether emojis are removed along with non-printable characters",
+      "default": true,
+      "required": false
     }
   ],
   "dependencies": {

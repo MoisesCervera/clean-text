@@ -7,11 +7,14 @@ export interface Options {
     targetQuoteType?: 'double' | 'single' | 'smart-double' | 'smart-single';
     // Line break format options
     lineBreakFormat?: 'LF' | 'CRLF' | 'auto';
+    // Emoji removal option
+    removeEmoji?: boolean;
 }
 
 interface Preferences {
     defaultQuoteType: 'double' | 'single' | 'smart-double' | 'smart-single';
     defaultLineBreakFormat: 'LF' | 'CRLF' | 'auto';
+    defaultRemoveEmoji: boolean;
 }
 
 // Normalize whitespace (combines removeNewlines, removeDoubleSpaces, and unifyWhitespace)
@@ -59,10 +62,21 @@ export function unifyQuotes(input: string, style: string): string {
 
 
 // Remove non printable characters without removing numbers or normal symbols
-export function removeNonPrintableCharacters(input: string): string {
-    // Removes control characters, formatting characters, unassigned code points, and private use characters
-    // Keeps numbers, letters, punctuation, and emoji
-    return input.replace(/[\p{Cc}\p{Cf}\p{Cs}\p{Co}\p{Cn}]+/gu, "");
+export function removeNonPrintableCharacters(input: string, options?: Options): string {
+    const preferences = getPreferenceValues<Preferences>();
+    const shouldRemoveEmoji = options?.removeEmoji ?? preferences.defaultRemoveEmoji ?? true;
+    
+    let s = input;
+    s = s.replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]/g, "");
+    s = s.replace(/[\p{Cf}\p{Cs}\p{Co}\p{Cn}]+/gu, "");
+    s = s.replace(/[\u200B-\u200D\u2060\uFEFF]/g, "");
+    if (shouldRemoveEmoji) {
+        s = s.replace(
+            /[\u{1F1E6}-\u{1F1FF}\u{1F300}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu,
+            ""
+        );
+    }
+    return s;
 }
 
 
@@ -74,6 +88,7 @@ export function normalizePunctuationSpaces(input: string): string {
         .replace(/\s*([,.!?;:])\s*/gu, "$1 ") // añade espacio cuando corresponde
         // Elimina espacio antes de puntos suspensivos
         .replace(/\s*\.\.\./g, "...")
+        // Evita "hola. . ." y lo deja como "hola..."
         .replace(/\.{3,}/g, "...")
         // Quita espacio antes de comillas o paréntesis de apertura
         .replace(/\s+([“"‘'(])/gu, "$1")
