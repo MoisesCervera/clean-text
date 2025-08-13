@@ -312,6 +312,14 @@
       "description": "Controls whether emojis are removed along with non-printable characters",
       "default": true,
       "required": false
+    },
+    {
+      "name": "abbreviationExceptions",
+      "type": "textfield",
+      "title": "Abbreviation Exceptions",
+      "description": "Comma-separated list of abbreviations that should not trigger sentence capitalization",
+      "default": "etc., p. ej., vs., e.g., i.e., cf., op. cit., et al., Ph.D., M.D., Dr., Mr., Mrs., Ms., Prof., Sr., Jr.",
+      "required": false
     }
   ],
   "dependencies": {
