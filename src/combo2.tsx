@@ -62,9 +62,6 @@ export default async function Combo2Command() {
         if (combo2Prefs.removeNonPrintable) {
             result = convert(result, "Remove Non-Printable Characters");
         }
-        if (combo2Prefs.normalizePunctuation) {
-            result = convert(result, "Normalize Punctuation Spaces");
-        }
         if (combo2Prefs.maintainLineBreaks) {
             result = convert(result, "Maintain Line Breaks");
         }

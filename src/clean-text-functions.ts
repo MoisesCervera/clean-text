@@ -9,11 +9,13 @@ export interface Options {
     lineBreakFormat?: 'LF' | 'CRLF' | 'auto';
     // Emoji removal option
     removeEmoji?: boolean;
+    preferredLanguage?: 'en' | 'es' | 'fr';
 }
 
 interface Preferences {
     defaultQuoteType: 'double' | 'single' | 'smart-double' | 'smart-single';
     defaultLineBreakFormat: 'LF' | 'CRLF' | 'auto';
+    defaultLanguage: 'en' | 'es' | 'fr';
     defaultRemoveEmoji: boolean;
     abbreviationExceptions: string;
 }
@@ -39,12 +41,12 @@ export function trimWhitespace(input: string, options?: Options): string {
 export function unifyQuotes(input: string, options?: Options): string {
     const preferences = getPreferenceValues<Preferences>();
     const targetType = options?.targetQuoteType || preferences.defaultQuoteType || 'double';
-    
+
     // Define quote mappings
     const smartSingleOpen = '\u2018', smartSingleClose = '\u2019';
     const smartDoubleOpen = '\u201C', smartDoubleClose = '\u201D';
     const straightSingle = "'", straightDouble = '"';
-    
+
     // Patterns for code blocks and HTML that should be preserved
     const codeBlockPatterns = [
         /```[\s\S]*?```/g,           // Markdown code blocks
@@ -54,11 +56,11 @@ export function unifyQuotes(input: string, options?: Options): string {
         /<[^>]*>/g,                  // HTML tags
         /\bhttps?:\/\/[^\s<>]+/gi,   // URLs
     ];
-    
+
     // Store protected content
     const protectedContent: string[] = [];
     let processedInput = input;
-    
+
     // Replace protected content with placeholders
     codeBlockPatterns.forEach((pattern, index) => {
         processedInput = processedInput.replace(pattern, (match) => {
@@ -67,7 +69,7 @@ export function unifyQuotes(input: string, options?: Options): string {
             return placeholder;
         });
     });
-    
+
     // Smart quote replacement with proper pairing
     function replaceQuotesWithPairing(text: string): string {
         // All smart/fancy quotes that need to be unified
@@ -75,23 +77,23 @@ export function unifyQuotes(input: string, options?: Options): string {
         const result = [];
         let inQuotes = false;
         let lastIndex = 0;
-        
+
         text.replace(allQuotes, (match, index) => {
             // Add text before the quote
             result.push(text.slice(lastIndex, index));
-            
+
             // Determine if this is an opening or closing quote
             const beforeChar = text[index - 1] || ' ';
             const afterChar = text[index + 1] || ' ';
-            
+
             // Logic for quote pairing: 
             // Opening if: after whitespace/punctuation, before letter/number
             // Closing if: after letter/number/punctuation, before whitespace/punctuation
             const isOpening = /[\s\(\[\{\u00A1\u00BF]/.test(beforeChar) && /[\w\p{L}]/u.test(afterChar);
             const isClosing = /[\w\p{L}.!?\)\]\}]/u.test(beforeChar) && /[\s.,!?;:\)\]\}]/.test(afterChar);
-            
+
             let replacement = match; // fallback
-            
+
             switch (targetType) {
                 case 'single':
                     replacement = straightSingle;
@@ -118,20 +120,20 @@ export function unifyQuotes(input: string, options?: Options): string {
                     }
                     break;
             }
-            
+
             result.push(replacement);
             lastIndex = index + match.length;
             return match; // This return is not used, just for replace callback
         });
-        
+
         // Add remaining text
         result.push(text.slice(lastIndex));
         return result.join('');
     }
-    
+
     // Apply quote replacement to processed input
     processedInput = replaceQuotesWithPairing(processedInput);
-    
+
     // Restore protected content
     protectedContent.forEach((content, index) => {
         codeBlockPatterns.forEach((_, patternIndex) => {
@@ -139,7 +141,7 @@ export function unifyQuotes(input: string, options?: Options): string {
             processedInput = processedInput.replace(pattern, content);
         });
     });
-    
+
     return processedInput;
 }
 
@@ -160,26 +162,6 @@ export function removeNonPrintableCharacters(input: string, options?: Options): 
         );
     }
     return input;
-}
-
-
-// Normalize spaces around punctuation marks
-export function normalizePunctuationSpaces(input: string, options?: Options): string {
-    return input
-        // Espacios correctos después de .,!?;: (pero no antes de cierre de comillas)
-        .replace(/\s*([,.!?;:])\s*(?=(?:["'”’)]|$))/gu, "$1") // si va seguido de cierre, no añade espacio extra
-        .replace(/\s*([,.!?;:])\s*/gu, "$1 ") // añade espacio cuando corresponde
-        // Elimina espacio antes de puntos suspensivos
-        .replace(/\s*\.\.\./g, "...")
-        // Evita "hola. . ." y lo deja como "hola..."
-        .replace(/\.{3,}/g, "...")
-        // Quita espacio antes de comillas o paréntesis de apertura
-        .replace(/\s+([“"‘'(])/gu, "$1")
-        // Quita espacio antes de comillas de cierre
-        .replace(/\s+(?=["'”’)\]])/gu, "")
-        // Colapsa espacios múltiples
-        .replace(/\s{2,}/g, " ")
-        .trim();
 }
 
 // Maintain consistent line breaks with configurable format
@@ -204,7 +186,10 @@ export function maintainLineBreaks(input: string, options?: Options): string {
         default:
             return result;
     }
-}// Single Paragraph Mode (unify all text into a single paragraph)
+}
+
+
+// Single Paragraph Mode (unify all text into a single paragraph)
 export function singleParagraphMode(input: string, options?: Options): string {
     return input
         .replace(/\r?\n\s*\r?\n/g, ' ')
@@ -226,26 +211,26 @@ export function removeNumbering(input: string, options?: Options): string {
 // Capitalize first letter of each sentence with smart abbreviation handling
 export function capitalizeSentences(input: string, options?: Options): string {
     const preferences = getPreferenceValues<Preferences>();
-    
+
     // Parse abbreviation exceptions from preferences
     const abbreviationsStr = preferences.abbreviationExceptions || "etc., p. ej., vs., e.g., i.e., cf., op. cit., et al., Ph.D., M.D., Dr., Mr., Mrs., Ms., Prof., Sr., Jr.";
     const abbreviations = abbreviationsStr
         .split(',')
         .map(abbr => abbr.trim().toLowerCase())
         .filter(abbr => abbr.length > 0);
-    
+
     // Create a regex pattern for abbreviations (escape special chars and remove trailing periods)
     const abbreviationPatterns = abbreviations.map(abbr => {
         const cleanAbbr = abbr.replace(/\.$/, ''); // Remove trailing period
         return cleanAbbr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // Escape special chars
     });
-    
+
     // Process the text
     let result = input;
-    
+
     // First pass: mark abbreviation contexts to protect them
     const protectedRanges: Array<{ start: number; end: number }> = [];
-    
+
     abbreviationPatterns.forEach(pattern => {
         const regex = new RegExp(`\\b${pattern}\\.`, 'gi');
         let match;
@@ -256,17 +241,17 @@ export function capitalizeSentences(input: string, options?: Options): string {
             });
         }
     });
-    
+
     // Sort ranges by start position
     protectedRanges.sort((a, b) => a.start - b.start);
-    
+
     // Function to check if a position is protected
     const isProtected = (position: number): boolean => {
-        return protectedRanges.some(range => 
+        return protectedRanges.some(range =>
             position >= range.start && position <= range.end
         );
     };
-    
+
     // Second pass: capitalize sentences while respecting protected ranges
     result = result.replace(
         /(^|[.!?]\s*)([\u201C\u201D\u2018\u2019"']?\s*)(\p{L})/gu,
@@ -275,22 +260,22 @@ export function capitalizeSentences(input: string, options?: Options): string {
             if (sentenceEnd.includes('.') && isProtected(offset + sentenceEnd.length - 1)) {
                 return match; // Don't capitalize after abbreviations
             }
-            
+
             // Capitalize the letter
             return sentenceEnd + quotes + letter.toUpperCase();
         }
     );
-    
+
     // Handle start of text (first letter should always be capitalized)
-    result = result.replace(/^([\u201C\u201D\u2018\u2019"']?\s*)(\p{L})/u, 
+    result = result.replace(/^([\u201C\u201D\u2018\u2019"']?\s*)(\p{L})/u,
         (match, quotes, letter) => quotes + letter.toUpperCase()
     );
-    
+
     // Handle after line breaks
     result = result.replace(/(\n+)([\u201C\u201D\u2018\u2019"']?\s*)(\p{L})/gu,
         (match, newlines, quotes, letter) => newlines + quotes + letter.toUpperCase()
     );
-    
+
     return result;
 }
 

@@ -65,15 +65,6 @@
           "required": false
         },
         {
-          "name": "normalizePunctuation",
-          "type": "checkbox",
-          "title": "Normalize Punctuation Spaces",
-          "label": "Fix spacing around punctuation",
-          "description": "Standardize punctuation spacing",
-          "default": false,
-          "required": false
-        },
-        {
           "name": "maintainLineBreaks",
           "type": "checkbox",
           "title": "Maintain Line Breaks",
@@ -163,15 +154,6 @@
           "required": false
         },
         {
-          "name": "normalizePunctuation",
-          "type": "checkbox",
-          "title": "Normalize Punctuation Spaces",
-          "label": "Fix spacing around punctuation",
-          "description": "Standardize punctuation spacing",
-          "default": false,
-          "required": false
-        },
-        {
           "name": "maintainLineBreaks",
           "type": "checkbox",
           "title": "Maintain Line Breaks",
@@ -211,6 +193,28 @@
     }
   ],
   "preferences": [
+    {
+      "name": "language",
+      "type": "dropdown",
+      "title": "Preferred Language",
+      "description": "Select the language for text processing",
+      "default": "en",
+      "required": false,
+      "data": [
+        {
+          "title": "English",
+          "value": "en"
+        },
+        {
+          "title": "Spanish",
+          "value": "es"
+        },
+        {
+          "title": "French",
+          "value": "fr"
+        }
+      ]
+    },
     {
       "name": "source",
       "type": "dropdown",
