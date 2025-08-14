@@ -7,7 +7,6 @@ export interface Options {
     targetQuoteType?: 'double' | 'single' | 'smart-double' | 'smart-single';
     // Line break format options
     lineBreakFormat?: 'LF' | 'CRLF' | 'auto';
-    preferredLanguage?: 'en' | 'es' | 'fr';
     // Whitespace normalization options
     targetWhitespaceType?: 'space' | 'no-break-space' | 'thin-space' | 'custom';
     customWhitespaceChar?: string;
@@ -16,7 +15,6 @@ export interface Options {
 interface Preferences {
     defaultQuoteType: 'double' | 'single' | 'smart-double' | 'smart-single';
     defaultLineBreakFormat: 'LF' | 'CRLF' | 'auto';
-    defaultLanguage: 'en' | 'es' | 'fr';
     abbreviationExceptions: string;
     defaultWhitespaceType: 'space' | 'no-break-space' | 'thin-space' | 'custom';
 }
@@ -266,10 +264,10 @@ export function capitalizeSentences(input: string, options?: Options): string {
         .map(abbr => abbr.trim().toLowerCase())
         .filter(abbr => abbr.length > 0);
 
-    // Create a regex pattern for abbreviations (escape special chars and remove trailing periods)
+    // Create a regex pattern for abbreviations - keep them as-is, just escape special chars
     const abbreviationPatterns = abbreviations.map(abbr => {
-        const cleanAbbr = abbr.replace(/\.$/, ''); // Remove trailing period
-        return cleanAbbr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // Escape special chars
+        // Don't remove trailing periods - escape all special chars including periods
+        return abbr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     });
 
     // Process the text
@@ -279,12 +277,13 @@ export function capitalizeSentences(input: string, options?: Options): string {
     const protectedRanges: Array<{ start: number; end: number }> = [];
 
     abbreviationPatterns.forEach(pattern => {
-        const regex = new RegExp(`\\b${pattern}\\.`, 'gi');
+        // Look for the exact abbreviation (with word boundary at start only)
+        const regex = new RegExp(`\\b${pattern}`, 'gi');
         let match;
         while ((match = regex.exec(result)) !== null) {
             protectedRanges.push({
-                start: match.index + match[0].length - 1, // Position of the period
-                end: match.index + match[0].length + 10   // Give some buffer for following text
+                start: match.index,
+                end: match.index + match[0].length + 5   // Protect the abbreviation and a few chars after
             });
         }
     });
@@ -303,8 +302,9 @@ export function capitalizeSentences(input: string, options?: Options): string {
     result = result.replace(
         /(^|[.!?]\s*)([\u201C\u201D\u2018\u2019"']?\s*)(\p{L})/gu,
         (match, sentenceEnd, quotes, letter, offset) => {
-            // Check if this period is part of an abbreviation
-            if (sentenceEnd.includes('.') && isProtected(offset + sentenceEnd.length - 1)) {
+            // Check if this position is within a protected abbreviation range
+            const periodPosition = offset + sentenceEnd.length - 1;
+            if (sentenceEnd.includes('.') && isProtected(periodPosition)) {
                 return match; // Don't capitalize after abbreviations
             }
 

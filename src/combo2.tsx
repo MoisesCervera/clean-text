@@ -47,29 +47,38 @@ export default async function Combo2Command() {
     try {
         const content = await readContent(preferences.source);
 
-        // Apply all enabled modifications in sequence
+        // Apply all enabled modifications in optimal sequence to avoid conflicts
         let result = content;
 
-        if (combo2Prefs.normalizeWhitespace) {
-            result = convert(result, "Normalize Whitespace");
+        // Phase 1: Clean invisible and problematic characters first
+        if (combo2Prefs.removeInvisibleCharacters) {
+            result = convert(result, "Remove Invisible Characters");
         }
-        if (combo2Prefs.trimWhitespace) {
-            result = convert(result, "Trim Whitespace");
+
+        // Phase 2: Handle structural changes (this includes whitespace normalization)
+        if (combo2Prefs.singleParagraph) {
+            result = convert(result, "Single Paragraph Mode");
+        } else {
+            // Only apply these if NOT using single paragraph mode (to avoid conflicts)
+            if (combo2Prefs.normalizeWhitespace) {
+                result = convert(result, "Normalize Whitespace");
+            }
+            if (combo2Prefs.maintainLineBreaks) {
+                result = convert(result, "Maintain Line Breaks");
+            }
+        }
+
+        // Phase 3: Content modifications
+        if (combo2Prefs.removeNumbering) {
+            result = convert(result, "Remove Numbering");
         }
         if (combo2Prefs.unifyQuotes) {
             result = convert(result, "Unify Quotes");
         }
-        if (combo2Prefs.removeInvisibleCharacters) {
-            result = convert(result, "Remove Invisible Characters");
-        }
-        if (combo2Prefs.maintainLineBreaks) {
-            result = convert(result, "Maintain Line Breaks");
-        }
-        if (combo2Prefs.singleParagraph) {
-            result = convert(result, "Single Paragraph Mode");
-        }
-        if (combo2Prefs.removeNumbering) {
-            result = convert(result, "Remove Numbering");
+
+        // Phase 4: Final cleanup and formatting
+        if (combo2Prefs.trimWhitespace) {
+            result = convert(result, "Trim Whitespace");
         }
         if (combo2Prefs.capitalizeSentences) {
             result = convert(result, "Capitalize Sentences");

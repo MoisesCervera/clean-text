@@ -33,7 +33,7 @@
           "type": "checkbox",
           "title": "Normalize Whitespace",
           "label": "Remove newlines and extra spaces",
-          "description": "Combine newlines, double spaces, and whitespace unification",
+          "description": "Ignored if Single Paragraph Mode is enabled (which includes this)",
           "default": false,
           "required": false
         },
@@ -42,7 +42,7 @@
           "type": "checkbox",
           "title": "Trim Whitespace",
           "label": "Remove leading/trailing spaces",
-          "description": "Remove spaces at start and end",
+          "description": "Ignored if Single Paragraph Mode is enabled (which includes this)",
           "default": false,
           "required": false
         },
@@ -69,7 +69,7 @@
           "type": "checkbox",
           "title": "Maintain Line Breaks",
           "label": "Standardize line break format",
-          "description": "Convert line breaks to consistent format",
+          "description": "Ignored if Single Paragraph Mode is enabled (which removes line breaks)",
           "default": false,
           "required": false
         },
@@ -78,7 +78,7 @@
           "type": "checkbox",
           "title": "Single Paragraph Mode",
           "label": "Convert to single paragraph",
-          "description": "Merge all text into one paragraph",
+          "description": "Merges text, normalizes whitespace, and trims automatically",
           "default": false,
           "required": false
         },
@@ -96,7 +96,7 @@
           "type": "checkbox",
           "title": "Capitalize Sentences",
           "label": "Capitalize first letter of sentences",
-          "description": "Fix sentence capitalization",
+          "description": "Fix sentence capitalization (works best when applied last)",
           "default": false,
           "required": false
         }
@@ -122,7 +122,7 @@
           "type": "checkbox",
           "title": "Normalize Whitespace",
           "label": "Remove newlines and extra spaces",
-          "description": "Combine newlines, double spaces, and whitespace unification",
+          "description": "Ignored if Single Paragraph Mode is enabled (which includes this)",
           "default": false,
           "required": false
         },
@@ -131,7 +131,7 @@
           "type": "checkbox",
           "title": "Trim Whitespace",
           "label": "Remove leading/trailing spaces",
-          "description": "Remove spaces at start and end",
+          "description": "Ignored if Single Paragraph Mode is enabled (which includes this)",
           "default": false,
           "required": false
         },
@@ -158,7 +158,7 @@
           "type": "checkbox",
           "title": "Maintain Line Breaks",
           "label": "Standardize line break format",
-          "description": "Convert line breaks to consistent format",
+          "description": "Ignored if Single Paragraph Mode is enabled (which removes line breaks)",
           "default": false,
           "required": false
         },
@@ -167,7 +167,7 @@
           "type": "checkbox",
           "title": "Single Paragraph Mode",
           "label": "Convert to single paragraph",
-          "description": "Merge all text into one paragraph",
+          "description": "Merges text, normalizes whitespace, and trims automatically",
           "default": false,
           "required": false
         },
@@ -185,7 +185,7 @@
           "type": "checkbox",
           "title": "Capitalize Sentences",
           "label": "Capitalize first letter of sentences",
-          "description": "Fix sentence capitalization",
+          "description": "Fix sentence capitalization (works best when applied last)",
           "default": true,
           "required": false
         }
@@ -193,28 +193,6 @@
     }
   ],
   "preferences": [
-    {
-      "name": "language",
-      "type": "dropdown",
-      "title": "Preferred Language",
-      "description": "Select the language for text processing",
-      "default": "en",
-      "required": false,
-      "data": [
-        {
-          "title": "English",
-          "value": "en"
-        },
-        {
-          "title": "Spanish",
-          "value": "es"
-        },
-        {
-          "title": "French",
-          "value": "fr"
-        }
-      ]
-    },
     {
       "name": "source",
       "type": "dropdown",
