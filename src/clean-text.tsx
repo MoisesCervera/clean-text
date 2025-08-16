@@ -78,7 +78,6 @@ const setPinnedModifications = async (pinned: ModificationType[]) => {
     try {
         await LocalStorage.setItem(PINNED_STORAGE_KEY, JSON.stringify(pinned));
     } catch (error) {
-        // Silently handle error
     }
 };
 
@@ -86,7 +85,6 @@ const setRecentModifications = async (recent: ModificationType[]) => {
     try {
         await LocalStorage.setItem(RECENT_STORAGE_KEY, JSON.stringify(recent));
     } catch (error) {
-        // Silently handle error
     }
 };
 
@@ -123,7 +121,6 @@ export default function Command(props: LaunchProps) {
     const [cacheLoaded, setCacheLoaded] = useState(false);
 
     useEffect(() => {
-        // Load from cache on component mount
         const loadFromCache = async () => {
             try {
                 const pinnedFromCache = await getPinnedModifications();
@@ -133,7 +130,7 @@ export default function Command(props: LaunchProps) {
                 setRecent(recentFromCache);
                 setCacheLoaded(true);
             } catch (error) {
-                setCacheLoaded(true); // Still mark as loaded even on error
+                setCacheLoaded(true);
             }
         };
 
@@ -142,14 +139,12 @@ export default function Command(props: LaunchProps) {
     }, []);
 
     useEffect(() => {
-        // Only save to cache after initial load is complete
         if (cacheLoaded) {
             setPinnedModifications(pinned);
         }
     }, [pinned, cacheLoaded]);
 
     useEffect(() => {
-        // Only save to cache after initial load is complete
         if (cacheLoaded) {
             setRecentModifications(recent);
         }
@@ -230,7 +225,7 @@ export default function Command(props: LaunchProps) {
         recent?: boolean;
     }) => {
         const context = encodeURIComponent(`{"modification":"${props.modification}"}`);
-        const deeplink = `raycast://extensions/erics118/${environment.extensionName}/${environment.commandName}?context=${context}`;
+        const deeplink = `raycast://extensions/GenuineCheddar/${environment.extensionName}/${environment.commandName}?context=${context}`;
 
         return (
             <List.Item
