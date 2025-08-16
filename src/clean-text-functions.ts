@@ -19,37 +19,19 @@ interface Preferences {
     defaultWhitespaceType: 'space' | 'no-break-space' | 'thin-space' | 'custom';
 }
 
-// Normalize space-like whitespace characters (unify all types of spaces into one selected type)
 export function normalizeWhitespace(input: string, options?: Options): string {
     const preferences = getPreferenceValues<Preferences>();
     const targetType = options?.targetWhitespaceType || preferences.defaultWhitespaceType || 'space';
 
-    // Define target whitespace character
-    let targetChar: string;
-    switch (targetType) {
-        case 'space':
-            targetChar = '\u0020'; // Regular space
-            break;
-        case 'no-break-space':
-            targetChar = '\u00A0'; // Non-breaking space
-            break;
-        case 'thin-space':
-            targetChar = '\u2009'; // Thin space
-            break;
-        case 'custom':
-            targetChar = options?.customWhitespaceChar || '\u0020';
-            break;
-        default:
-            targetChar = '\u0020';
-    }
-
-    // Category 1: Space-like whitespace characters (excluding line breaks)
-    const spacePattern = /[\u0020\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000]+/g;
+    const targetChar = {
+        'space': '\u0020',
+        'no-break-space': '\u00A0',
+        'thin-space': '\u2009',
+        'custom': options?.customWhitespaceChar || '\u0020'
+    }[targetType] || '\u0020';
 
     return input
-        .replace(spacePattern, targetChar) // Replace all space variants with target
-        .replace(new RegExp(`${targetChar.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}+`, 'g'), targetChar) // Collapse consecutive target chars
-        .trim(); // Trim leading and trailing whitespace
+        .replace(/[\u0020\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000]+/g, targetChar)
 }
 
 // Remove invisible and zero-width characters
@@ -65,119 +47,54 @@ export function removeInvisibleCharacters(input: string, options?: Options): str
         .replace(/[\u00AD\u034F\u061C\u115F\u17B4\u17B5\u200E\u200F\u202A-\u202E\u2066-\u2069]/g, '');
 }
 
-// Trim leading and trailing whitespace
-export function trimWhitespace(input: string, options?: Options): string {
-    // Trim all types of whitespace including spaces and line breaks
-    const allWhitespacePattern = /^[\s\u0020\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000\u000A\u000B\u000C\u000D\u0085\u2028\u2029]+|[\s\u0020\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000\u000A\u000B\u000C\u000D\u0085\u2028\u2029]+$/g;
-    return input.replace(allWhitespacePattern, '');
-}
-
 // Smart quote unification with context awareness
 export function unifyQuotes(input: string, options?: Options): string {
     const preferences = getPreferenceValues<Preferences>();
     const targetType = options?.targetQuoteType || preferences.defaultQuoteType || 'double';
 
-    // Define quote mappings
-    const smartSingleOpen = '\u2018', smartSingleClose = '\u2019';
-    const smartDoubleOpen = '\u201C', smartDoubleClose = '\u201D';
-    const straightSingle = "'", straightDouble = '"';
+    const quotes = {
+        single: "'",
+        double: '"',
+        'smart-single': { open: '\u2018', close: '\u2019' },
+        'smart-double': { open: '\u201C', close: '\u201D' }
+    };
 
-    // Patterns for code blocks and HTML that should be preserved
-    const codeBlockPatterns = [
-        /```[\s\S]*?```/g,           // Markdown code blocks
-        /<code[\s\S]*?<\/code>/gi,   // HTML code tags
-        /<pre[\s\S]*?<\/pre>/gi,     // HTML pre tags
-        /`[^`\n]*`/g,                // Inline code (backticks)
-        /<[^>]*>/g,                  // HTML tags
-        /\bhttps?:\/\/[^\s<>]+/gi,   // URLs
-    ];
-
-    // Store protected content
+    // Protect code blocks and HTML
     const protectedContent: string[] = [];
-    let processedInput = input;
-
-    // Replace protected content with placeholders
-    codeBlockPatterns.forEach((pattern, index) => {
-        processedInput = processedInput.replace(pattern, (match) => {
-            const placeholder = `__PROTECTED_${index}_${protectedContent.length}__`;
+    let processedInput = input.replace(
+        /```[\s\S]*?```|<(?:code|pre)[\s\S]*?<\/(?:code|pre)>|`[^`\n]*`|<[^>]*>|\bhttps?:\/\/[^\s<>]+/gi,
+        match => {
             protectedContent.push(match);
-            return placeholder;
-        });
+            return `__P${protectedContent.length - 1}__`;
+        }
+    );
+
+    // Replace quotes with proper pairing
+    const allQuotes = /[\u2018\u2019\u201A\u201B\u201C\u201D\u201E\u201F\u2039\u203A\u00AB\u00BB]/g;
+    let inQuotes = false;
+
+    processedInput = processedInput.replace(allQuotes, (match, index, text) => {
+        const before = text[index - 1] || ' ';
+        const after = text[index + 1] || ' ';
+        const isOpening = /[\s\(\[\{\u00A1\u00BF]/.test(before) && /[\w\p{L}]/u.test(after);
+        const isClosing = /[\w\p{L}.!?\)\]\}]/u.test(before) && /[\s.,!?;:\)\]\}]/.test(after);
+
+        if (typeof quotes[targetType] === 'string') {
+            return quotes[targetType];
+        }
+
+        const smartQuote = quotes[targetType];
+        if (isOpening || (!isClosing && !inQuotes)) {
+            inQuotes = true;
+            return smartQuote.open;
+        } else {
+            inQuotes = false;
+            return smartQuote.close;
+        }
     });
-
-    // Smart quote replacement with proper pairing
-    function replaceQuotesWithPairing(text: string): string {
-        // All smart/fancy quotes that need to be unified
-        const allQuotes = /[\u2018\u2019\u201A\u201B\u201C\u201D\u201E\u201F\u2039\u203A\u00AB\u00BB]/g;
-        const result = [];
-        let inQuotes = false;
-        let lastIndex = 0;
-
-        text.replace(allQuotes, (match, index) => {
-            // Add text before the quote
-            result.push(text.slice(lastIndex, index));
-
-            // Determine if this is an opening or closing quote
-            const beforeChar = text[index - 1] || ' ';
-            const afterChar = text[index + 1] || ' ';
-
-            // Logic for quote pairing: 
-            // Opening if: after whitespace/punctuation, before letter/number
-            // Closing if: after letter/number/punctuation, before whitespace/punctuation
-            const isOpening = /[\s\(\[\{\u00A1\u00BF]/.test(beforeChar) && /[\w\p{L}]/u.test(afterChar);
-            const isClosing = /[\w\p{L}.!?\)\]\}]/u.test(beforeChar) && /[\s.,!?;:\)\]\}]/.test(afterChar);
-
-            let replacement = match; // fallback
-
-            switch (targetType) {
-                case 'single':
-                    replacement = straightSingle;
-                    break;
-                case 'double':
-                    replacement = straightDouble;
-                    break;
-                case 'smart-single':
-                    if (isOpening || (!isClosing && !inQuotes)) {
-                        replacement = smartSingleOpen;
-                        inQuotes = true;
-                    } else {
-                        replacement = smartSingleClose;
-                        inQuotes = false;
-                    }
-                    break;
-                case 'smart-double':
-                    if (isOpening || (!isClosing && !inQuotes)) {
-                        replacement = smartDoubleOpen;
-                        inQuotes = true;
-                    } else {
-                        replacement = smartDoubleClose;
-                        inQuotes = false;
-                    }
-                    break;
-            }
-
-            result.push(replacement);
-            lastIndex = index + match.length;
-            return match; // This return is not used, just for replace callback
-        });
-
-        // Add remaining text
-        result.push(text.slice(lastIndex));
-        return result.join('');
-    }
-
-    // Apply quote replacement to processed input
-    processedInput = replaceQuotesWithPairing(processedInput);
 
     // Restore protected content
-    protectedContent.forEach((content, index) => {
-        codeBlockPatterns.forEach((_, patternIndex) => {
-            const pattern = new RegExp(`__PROTECTED_${patternIndex}_${index}__`, 'g');
-            processedInput = processedInput.replace(pattern, content);
-        });
-    });
-
-    return processedInput;
+    return processedInput.replace(/__P(\d+)__/g, (_, i) => protectedContent[i]);
 }
 
 // Maintain consistent line breaks with configurable format
@@ -209,38 +126,31 @@ export function maintainLineBreaks(input: string, options?: Options): string {
 export function singleParagraphMode(input: string, options?: Options): string {
     const preferences = getPreferenceValues<Preferences>();
     const targetType = options?.targetWhitespaceType || preferences.defaultWhitespaceType || 'space';
+    const targetLineBreakFormat = options?.lineBreakFormat || preferences.defaultLineBreakFormat || 'LF';
 
-    let targetChar: string;
-    switch (targetType) {
-        case 'space':
-            targetChar = '\u0020';
-            break;
-        case 'no-break-space':
-            targetChar = '\u00A0';
-            break;
-        case 'thin-space':
-            targetChar = '\u2009';
-            break;
-        case 'custom':
-            targetChar = options?.customWhitespaceChar || '\u0020';
-            break;
-        default:
-            targetChar = '\u0020';
-    }
+    // Define target whitespace and line break characters
+    const targetChar = {
+        'space': '\u0020',
+        'no-break-space': '\u00A0',
+        'thin-space': '\u2009',
+        'custom': options?.customWhitespaceChar || '\u0020'
+    }[targetType] || '\u0020';
 
-    return input
-        // First remove invisible characters
+    const lineBreakChar = {
+        'CRLF': '\r\n',
+        'LF': '\n',
+        'auto': (typeof process !== 'undefined' && process.platform === 'win32') ? '\r\n' : '\n'
+    }[targetLineBreakFormat] || '\n';
+
+    // Process: normalize line breaks → remove invisibles → convert breaks to spaces → normalize spaces
+    const processed = maintainLineBreaks(input, { lineBreakFormat: targetLineBreakFormat })
         .replace(/[\u200B\u200C\u200D\u2060\uFEFF\u180E\u3164\uFFA0\u2061-\u2064\u00AD\u034F\u061C\u115F\u17B4\u17B5\u200E\u200F\u202A-\u202E\u2066-\u2069]/g, '')
-        // Replace paragraph breaks (double line breaks) with single space
-        .replace(/[\u000A\u000B\u000C\u000D\u0085\u2028\u2029]+\s*[\u000A\u000B\u000C\u000D\u0085\u2028\u2029]+/g, targetChar)
-        // Replace remaining line breaks with target character
         .replace(/[\u000A\u000B\u000C\u000D\u0085\u2028\u2029]+/g, targetChar)
-        // Normalize all space-like characters to target character
         .replace(/[\u0020\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000]+/g, targetChar)
-        // Collapse multiple consecutive target characters into one
         .replace(new RegExp(`${targetChar.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}+`, 'g'), targetChar)
-        // Trim leading and trailing whitespace
-        .trim();
+
+    // Always end with a line break
+    return processed + lineBreakChar;
 }
 
 // Remove numbering (1., 2., 3.), bullet points (•, –) or (a), (b), (c)
@@ -250,80 +160,33 @@ export function removeNumbering(input: string, options?: Options): string {
         .replace(/^\s*\([a-zA-Z]\)\s*/gm, '') // Remove "(a) "
         .replace(/^\s*[•–-]\s+(?=[A-Z0-9])/gm, '') // Bullet only if followed by uppercase or digit
         .replace(/^\s*[\*\+]\s*/gm, '') // Remove "*" or "+"
-        .trim();
 }
-
-// Capitalize first letter of each sentence with smart abbreviation handling
 export function capitalizeSentences(input: string, options?: Options): string {
     const preferences = getPreferenceValues<Preferences>();
 
-    // Parse abbreviation exceptions from preferences
-    const abbreviationsStr = preferences.abbreviationExceptions || "etc., p. ej., vs., e.g., i.e., cf., op. cit., et al., Ph.D., M.D., Dr., Mr., Mrs., Ms., Prof., Sr., Jr.";
-    const abbreviations = abbreviationsStr
+    // Parse abbreviations and create protection regex
+    const abbreviations = (preferences.abbreviationExceptions || "etc., p. ej., vs., e.g., i.e., cf., op. cit., et al., Ph.D., M.D., Dr., Mr., Mrs., Ms., Prof., Sr., Jr.")
         .split(',')
         .map(abbr => abbr.trim().toLowerCase())
-        .filter(abbr => abbr.length > 0);
+        .filter(abbr => abbr.length > 0)
+        .map(abbr => abbr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
 
-    // Create a regex pattern for abbreviations - keep them as-is, just escape special chars
-    const abbreviationPatterns = abbreviations.map(abbr => {
-        // Don't remove trailing periods - escape all special chars including periods
-        return abbr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const protectionRegex = new RegExp(`\\b(?:${abbreviations.join('|')})`, 'gi');
+
+    // Mark protected abbreviations with placeholders
+    const protectedPhrases: string[] = [];
+    let result = input.replace(protectionRegex, match => {
+        protectedPhrases.push(match);
+        return `__ABB${protectedPhrases.length - 1}__`;
     });
 
-    // Process the text
-    let result = input;
+    // Capitalize after sentence boundaries, start of text, and line breaks
+    result = result
+        .replace(/(^|[.!?]\s*)([\u201C\u201D\u2018\u2019"']?\s*)(\p{L})/gu, (_, end, quotes, letter) =>
+            end + quotes + letter.toUpperCase())
+        .replace(/(\n+)([\u201C\u201D\u2018\u2019"']?\s*)(\p{L})/gu, (_, newlines, quotes, letter) =>
+            newlines + quotes + letter.toUpperCase());
 
-    // First pass: mark abbreviation contexts to protect them
-    const protectedRanges: Array<{ start: number; end: number }> = [];
-
-    abbreviationPatterns.forEach(pattern => {
-        // Look for the exact abbreviation (with word boundary at start only)
-        const regex = new RegExp(`\\b${pattern}`, 'gi');
-        let match;
-        while ((match = regex.exec(result)) !== null) {
-            protectedRanges.push({
-                start: match.index,
-                end: match.index + match[0].length + 5   // Protect the abbreviation and a few chars after
-            });
-        }
-    });
-
-    // Sort ranges by start position
-    protectedRanges.sort((a, b) => a.start - b.start);
-
-    // Function to check if a position is protected
-    const isProtected = (position: number): boolean => {
-        return protectedRanges.some(range =>
-            position >= range.start && position <= range.end
-        );
-    };
-
-    // Second pass: capitalize sentences while respecting protected ranges
-    result = result.replace(
-        /(^|[.!?]\s*)([\u201C\u201D\u2018\u2019"']?\s*)(\p{L})/gu,
-        (match, sentenceEnd, quotes, letter, offset) => {
-            // Check if this position is within a protected abbreviation range
-            const periodPosition = offset + sentenceEnd.length - 1;
-            if (sentenceEnd.includes('.') && isProtected(periodPosition)) {
-                return match; // Don't capitalize after abbreviations
-            }
-
-            // Capitalize the letter
-            return sentenceEnd + quotes + letter.toUpperCase();
-        }
-    );
-
-    // Handle start of text (first letter should always be capitalized)
-    result = result.replace(/^([\u201C\u201D\u2018\u2019"']?\s*)(\p{L})/u,
-        (match, quotes, letter) => quotes + letter.toUpperCase()
-    );
-
-    // Handle after line breaks
-    result = result.replace(/(\n+)([\u201C\u201D\u2018\u2019"']?\s*)(\p{L})/gu,
-        (match, newlines, quotes, letter) => newlines + quotes + letter.toUpperCase()
-    );
-
-    return result;
+    // Restore protected abbreviations
+    return result.replace(/__ABB(\d+)__/g, (_, i) => protectedPhrases[i]);
 }
-
-

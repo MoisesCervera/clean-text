@@ -5,7 +5,6 @@ Copying text from PDFs, OCR, academic papers, or certain websites often leaves y
 ## What It Does
 
 - Normalize whitespace into single spaces  
-- Trim leading and trailing spaces  
 - Unify quotes (single, double, or smart)  
 - Remove invisible characters like zero-width spaces  
 - Standardize line breaks  

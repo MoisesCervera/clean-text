@@ -77,9 +77,6 @@ export default async function Combo2Command() {
         }
 
         // Phase 4: Final cleanup and formatting
-        if (combo2Prefs.trimWhitespace) {
-            result = convert(result, "Trim Whitespace");
-        }
         if (combo2Prefs.capitalizeSentences) {
             result = convert(result, "Capitalize Sentences");
         }

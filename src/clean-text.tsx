@@ -18,22 +18,23 @@ import {
     showToast,
     Toast,
     Keyboard,
+    LocalStorage,
 } from "@raycast/api";
-import { JSX, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { functions, aliases, convert, modifyTextWrapper, ModificationType } from "./modifications";
+
+class NoTextError extends Error {
+    constructor() {
+        super("No text");
+        Object.setPrototypeOf(this, NoTextError.prototype);
+    }
+}
 
 async function getSelection() {
     try {
         return await getSelectedText();
     } catch (error) {
         return "";
-    }
-}
-
-class NoTextError extends Error {
-    constructor() {
-        super("No text");
-        Object.setPrototypeOf(this, NoTextError.prototype);
     }
 }
 
@@ -52,26 +53,41 @@ async function readContent(preferredSource: string) {
     throw new NoTextError();
 }
 
+const PINNED_STORAGE_KEY = "clean-text-pinned";
+const RECENT_STORAGE_KEY = "clean-text-recent";
 
-
-const cache = new Cache();
-
-const getPinnedModifications = (): ModificationType[] => {
-    const pinned = cache.get("pinned");
-    return pinned ? JSON.parse(pinned) : [];
+const getPinnedModifications = async (): Promise<ModificationType[]> => {
+    try {
+        const pinned = await LocalStorage.getItem<string>(PINNED_STORAGE_KEY);
+        return pinned ? JSON.parse(pinned) : [];
+    } catch (error) {
+        return [];
+    }
 };
 
-const getRecentModifications = (): ModificationType[] => {
-    const recent = cache.get("recent");
-    return recent ? JSON.parse(recent) : [];
+const getRecentModifications = async (): Promise<ModificationType[]> => {
+    try {
+        const recent = await LocalStorage.getItem<string>(RECENT_STORAGE_KEY);
+        return recent ? JSON.parse(recent) : [];
+    } catch (error) {
+        return [];
+    }
 };
 
-const setPinnedModifications = (pinned: ModificationType[]) => {
-    cache.set("pinned", JSON.stringify(pinned));
+const setPinnedModifications = async (pinned: ModificationType[]) => {
+    try {
+        await LocalStorage.setItem(PINNED_STORAGE_KEY, JSON.stringify(pinned));
+    } catch (error) {
+        // Silently handle error
+    }
 };
 
-const setRecentModifications = (recent: ModificationType[]) => {
-    cache.set("recent", JSON.stringify(recent));
+const setRecentModifications = async (recent: ModificationType[]) => {
+    try {
+        await LocalStorage.setItem(RECENT_STORAGE_KEY, JSON.stringify(recent));
+    } catch (error) {
+        // Silently handle error
+    }
 };
 
 
@@ -104,20 +120,40 @@ export default function Command(props: LaunchProps) {
 
     const [pinned, setPinned] = useState<ModificationType[]>([]);
     const [recent, setRecent] = useState<ModificationType[]>([]);
+    const [cacheLoaded, setCacheLoaded] = useState(false);
 
     useEffect(() => {
-        setPinned(getPinnedModifications());
-        setRecent(getRecentModifications());
+        // Load from cache on component mount
+        const loadFromCache = async () => {
+            try {
+                const pinnedFromCache = await getPinnedModifications();
+                const recentFromCache = await getRecentModifications();
+
+                setPinned(pinnedFromCache);
+                setRecent(recentFromCache);
+                setCacheLoaded(true);
+            } catch (error) {
+                setCacheLoaded(true); // Still mark as loaded even on error
+            }
+        };
+
+        loadFromCache();
         getFrontmostApplication().then(setFrontmostApp);
     }, []);
 
     useEffect(() => {
-        setPinnedModifications(pinned);
-    }, [pinned]);
+        // Only save to cache after initial load is complete
+        if (cacheLoaded) {
+            setPinnedModifications(pinned);
+        }
+    }, [pinned, cacheLoaded]);
 
     useEffect(() => {
-        setRecentModifications(recent);
-    }, [recent]);
+        // Only save to cache after initial load is complete
+        if (cacheLoaded) {
+            setRecentModifications(recent);
+        }
+    }, [recent, cacheLoaded]);
 
     const refreshContent = async () => {
         try {
@@ -142,7 +178,7 @@ export default function Command(props: LaunchProps) {
         modified: string;
         pinned?: boolean;
         recent?: boolean;
-    }): JSX.Element => {
+    }) => {
         return (
             <Action
                 title="Copy to Clipboard"
@@ -166,7 +202,7 @@ export default function Command(props: LaunchProps) {
         modified: string;
         pinned?: boolean;
         recent?: boolean;
-    }): JSX.Element | null => {
+    }) => {
         return frontmostApp ? (
             <Action
                 title={`Paste in ${frontmostApp.name}`}
@@ -192,7 +228,7 @@ export default function Command(props: LaunchProps) {
         detail: string;
         pinned?: boolean;
         recent?: boolean;
-    }): JSX.Element => {
+    }) => {
         const context = encodeURIComponent(`{"modification":"${props.modification}"}`);
         const deeplink = `raycast://extensions/erics118/${environment.extensionName}/${environment.commandName}?context=${context}`;
 
@@ -284,7 +320,7 @@ export default function Command(props: LaunchProps) {
     };
 
     return (
-        <List isShowingDetail={true} isLoading={!pinned || !recent} selectedItemId={recent[0]}>
+        <List isShowingDetail={true} isLoading={!cacheLoaded} selectedItemId={recent[0]}>
             <List.Section title="Pinned">
                 {pinned?.map((key) => {
                     const modified = modifyTextWrapper(content, key);

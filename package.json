@@ -3,8 +3,11 @@
   "name": "clean-text",
   "title": "Clean Text",
   "description": "Clean and format text with various text modification operations",
-  "icon": "extension-icon.png",
+  "icon": "command-icon.png",
   "author": "GenuineCheddar",
+  "categories": [
+    "Other"
+  ],
   "license": "MIT",
   "commands": [
     {
@@ -15,7 +18,7 @@
     },
     {
       "name": "combo1",
-      "title": "Combo 1",
+      "title": "Clean Combo 1",
       "description": "Apply your first custom combination of text modifications",
       "mode": "no-view",
       "preferences": [
@@ -33,15 +36,6 @@
           "type": "checkbox",
           "title": "Normalize Whitespace",
           "label": "Remove newlines and extra spaces",
-          "description": "Ignored if Single Paragraph Mode is enabled (which includes this)",
-          "default": false,
-          "required": false
-        },
-        {
-          "name": "trimWhitespace",
-          "type": "checkbox",
-          "title": "Trim Whitespace",
-          "label": "Remove leading/trailing spaces",
           "description": "Ignored if Single Paragraph Mode is enabled (which includes this)",
           "default": false,
           "required": false
@@ -104,7 +98,7 @@
     },
     {
       "name": "combo2",
-      "title": "Combo 2",
+      "title": "Clean Combo 2",
       "description": "Apply your second custom combination of text modifications",
       "mode": "no-view",
       "preferences": [
@@ -122,15 +116,6 @@
           "type": "checkbox",
           "title": "Normalize Whitespace",
           "label": "Remove newlines and extra spaces",
-          "description": "Ignored if Single Paragraph Mode is enabled (which includes this)",
-          "default": false,
-          "required": false
-        },
-        {
-          "name": "trimWhitespace",
-          "type": "checkbox",
-          "title": "Trim Whitespace",
-          "label": "Remove leading/trailing spaces",
           "description": "Ignored if Single Paragraph Mode is enabled (which includes this)",
           "default": false,
           "required": false

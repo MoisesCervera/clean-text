@@ -6,7 +6,6 @@ export type Modifications = Record<string, ModificationFunction>;
 
 export const functions: Modifications = {
     "Normalize Whitespace": cleanText.normalizeWhitespace,
-    "Trim Whitespace": cleanText.trimWhitespace,
     "Unify Quotes": cleanText.unifyQuotes,
     "Remove Invisible Characters": cleanText.removeInvisibleCharacters,
     "Maintain Line Breaks": cleanText.maintainLineBreaks,
@@ -21,7 +20,6 @@ export type ModificationType = (typeof modifications)[number];
 
 export const aliases: Record<ModificationType, string[]> = {
     "Normalize Whitespace": ["normalize-whitespace", "remove-newlines", "remove-double-spaces", "unify-whitespace", "whitespace-normalization"],
-    "Trim Whitespace": ["trim-whitespace", "whitespace-trimming"],
     "Unify Quotes": ["unify-quotes", "quote-unification"],
     "Remove Invisible Characters": ["remove-invisible", "invisible-removal", "remove-non-printable", "non-printable-removal"],
     "Maintain Line Breaks": ["maintain-line-breaks", "line-break-maintenance"],
